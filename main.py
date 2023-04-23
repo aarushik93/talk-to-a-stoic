@@ -8,6 +8,7 @@ from langchain.memory import ConversationBufferMemory
 import weaviate
 import os
 from langchain.utilities import GoogleSerperAPIWrapper
+from langchain.chat_models import ChatOpenAI
 
 
 # Set up the Streamlit app
@@ -27,7 +28,7 @@ client = weaviate.Client(
 vectorstore = Weaviate(client, "Paragraph", "content")
 ret = vectorstore.as_retriever()
 
-AI = OpenAI(temperature=0.2, openai_api_key=OPENAI_API_KEY)
+AI = OpenAI(temperature=0.8, openai_api_key=OPENAI_API_KEY)
 
 # Set up the question-answering system
 qa = RetrievalQA.from_chain_type(
@@ -51,10 +52,9 @@ tools = [
         description="Useful for when you need to get current, up to date answers."
     )
 ]
-prefix = """You are a stoic giving people advice, as best you can based on the context and memory available.
+prefix = """You are a Stoic giving people advice using Stoicism, based on the context and memory available.
             Your answers should be directed at the human, say "you".
-            Add an example, relevant in 2023, to illustrate the meaning of the answer.
-            Always apply stoic principles.
+            Add specific examples, relevant in 2023, to illustrate the meaning of the answer.
             You have access to to two tools:"""
 suffix = """Begin!"
 
@@ -75,7 +75,7 @@ if "memory" not in st.session_state:
     )
 
 llm_chain = LLMChain(
-    llm=OpenAI(
+    llm=ChatOpenAI(
         temperature=0.2, openai_api_key=OPENAI_API_KEY, model_name="gpt-3.5-turbo"
     ),
     prompt=prompt,
@@ -96,7 +96,6 @@ if query:
             "Thinking...."
     ):
         res = agent_chain.run(query)
-        st.info(query, icon="😊")
         st.info(res, icon="🤖")
 
 # Allow the user to view the conversation history and other information stored in the agent's memory
