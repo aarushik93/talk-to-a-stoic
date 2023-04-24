@@ -1,10 +1,11 @@
 import streamlit as st
 from langchain import LLMChain, OpenAI
-from langchain.agents import AgentExecutor, Tool, ZeroShotAgent
+from langchain.agents import AgentExecutor, Tool, ZeroShotAgent, ReActTextWorldAgent, initialize_agent
 from langchain.chains import RetrievalQA, ConversationalRetrievalChain
 from langchain.vectorstores.weaviate import Weaviate
 from langchain.llms import OpenAI
 from langchain.memory import ConversationBufferMemory
+from langchain.agents import AgentType
 import weaviate
 import os
 from langchain.utilities import GoogleSerperAPIWrapper
@@ -28,7 +29,7 @@ client = weaviate.Client(
 vectorstore = Weaviate(client, "Paragraph", "content")
 ret = vectorstore.as_retriever()
 
-AI = OpenAI(temperature=0.8, openai_api_key=OPENAI_API_KEY)
+AI = OpenAI(temperature=0.7, openai_api_key=OPENAI_API_KEY)
 
 # Set up the question-answering system
 qa = RetrievalQA.from_chain_type(
@@ -57,9 +58,9 @@ prefix = """You are a Stoic giving people advice using Stoicism, based on the co
             Add specific examples, relevant in 2023, to illustrate the meaning of the answer.
             You have access to to two tools:"""
 suffix = """Begin!"
-
+Chat History:
 {chat_history}
-Question: {input}
+Latest Question: {input}
 {agent_scratchpad}"""
 
 prompt = ZeroShotAgent.create_prompt(
@@ -76,7 +77,7 @@ if "memory" not in st.session_state:
 
 llm_chain = LLMChain(
     llm=ChatOpenAI(
-        temperature=0.2, openai_api_key=OPENAI_API_KEY, model_name="gpt-3.5-turbo"
+        temperature=0.8, openai_api_key=OPENAI_API_KEY, model_name="gpt-3.5-turbo"
     ),
     prompt=prompt,
 )
