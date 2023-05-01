@@ -5,17 +5,15 @@ from langchain.chains import RetrievalQA, ConversationalRetrievalChain
 from langchain.vectorstores.weaviate import Weaviate
 from langchain.llms import OpenAI
 from langchain.memory import ConversationBufferMemory
-from langchain.agents import AgentType
 import weaviate
-import os
 from langchain.utilities import GoogleSerperAPIWrapper
 from langchain.chat_models import ChatOpenAI
 
 st.title("Talk to a Modern Stoic")
 
-SERPER_API_KEY = "824b5e0d97973ee3e0d750e0f572d1773ab8a031"
-OPENAI_API_KEY = "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"
-WEAVIATE_URL = "https://stoicism-0fx6qgtt.weaviate.network"  # books live here
+SERPER_API_KEY = "<YOUR_KEY>"
+OPENAI_API_KEY = "<YOUR_KEY>"
+WEAVIATE_URL = "<YOUR_URL>"  # books live here
 
 client = weaviate.Client(
     url=WEAVIATE_URL,
@@ -27,9 +25,9 @@ client = weaviate.Client(
 vectorstore = Weaviate(client, "Paragraph", "content")
 ret = vectorstore.as_retriever()
 
-AI = OpenAI(temperature=0.7, openai_api_key=OPENAI_API_KEY)
+AI = OpenAI(temperature=0.2, openai_api_key=OPENAI_API_KEY)
 
-# Set up the question-answering system
+# Set up the retrieval QA system. This pulls docs from Weaviate and answers questions.
 qa = RetrievalQA.from_chain_type(
     llm=AI,
     chain_type="stuff",
@@ -52,10 +50,9 @@ tools = [
     )
 ]
 prefix = """You are a Stoic giving people advice using Stoicism, based on the context and memory available.
-            Your answers should be directed at the human, say "you".
             Add specific examples, relevant in 2023, to illustrate the meaning of the answer.
-            You have access to to two tools:"""
-suffix = """Begin!"
+            You can use these two tools to two tools:"""
+suffix = """Start!"
 Chat History:
 {chat_history}
 Latest Question: {input}
@@ -97,7 +94,7 @@ if query:
         res = agent_chain.run(query)
         st.info(res, icon="🤖")
 
-# Allow the user to view the conversation history and other information stored in the agent's memory
+# Optional: Allow users to see the bot's "thinking"
 with st.expander("My thinking"):
     st.session_state.memory.return_messages
 
